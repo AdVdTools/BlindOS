@@ -1,0 +1,18 @@
+html {
+    padding: 0;
+    margin: 0;
+} 
+
+body {
+    padding: 0px;
+    margin: 8px;
+    background-color: #444;
+}
+
+.terminal {
+    color: #eee;
+    background-color: #222;
+    border: 1px solid #eee;
+    border-radius: 3px;
+    padding: 3px;
+}
