@@ -4,27 +4,34 @@ window.onload = function() {
             switch (cmd) {
                 case 'clear':
                     terminal.clear();
-                    return '';
+                    break;
 
                 case 'help':
-                    return 'Commands: clear, help, theme, ver or version<br>More help available <a class="external" href="http://github.com/SDA/terminal" target="_blank">here</a>';
-
-                case 'theme':
+                    terminal.output ('Commands: clear, help, prompt, echo, ver or version<br>More help available <a class="external" href="http://github.com/SDA/terminal" target="_blank">here</a>');
+                    break;
+                    
+                case 'prompt':
                     if (args && args[0]) {
-                        if (args.length > 1) return 'Too many arguments';
-                        else if (args[0].match(/^interlaced|modern|white$/)) { terminal.setTheme(args[0]); return ''; }
-                        else return 'Invalid theme';
+                        if (args.length > 1) terminal.ouput('Too many arguments');
+                        else { terminal.setPrompt(args[0]); }
                     }
-                    return terminal.getTheme();
+                    else terminal.output(terminal.getPrompt());
+                    break;
+
+                case 'echo':
+                    terminal.output(args.join(' '))
+                    break;
 
                 case 'ver':
                 case 'version':
-                    return '1.0.0';
+                    terminal.output(terminal.version);
+                    break;
 
                 default:
                     // Unknown command.
                     return false;
             };
+            return true;
         }
     });
 }

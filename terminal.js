@@ -5,16 +5,14 @@
 
 		var defaults = {
 			welcome: '',
-			prompt: '',
-			separator: '&gt;',
-			theme: 'interlaced'
+			prompt: 'Prompt&gt;'
 		};
 
 		var options = options || defaults;
 		options.welcome = options.welcome || defaults.welcome;
 		options.prompt = options.prompt || defaults.prompt;
-		options.separator = options.separator || defaults.separator;
-		options.theme = options.theme || defaults.theme;
+
+		var _currentPrompt = options.prompt;
 
         console.log(arguments)// all the function arguments, including arguments beyond those specified in the signature
 
@@ -25,26 +23,41 @@
 		var _histtemp = '';
 
 		// Create terminal and cache DOM nodes;
-		console.log(outputID)
-		var _terminal = document.getElementById(outputID);
-		console.log(_terminal)
-		_terminal.classList.add('terminal');
-		_terminal.classList.add('terminal-' + options.theme);
-		_terminal.insertAdjacentHTML('beforeEnd', [
-			'<div class="background"><div class="interlace"></div></div>',
-			'<div class="container">',
-			'<output></output>',
-			'<table class="input-line">',
-			'<tr><td nowrap><div class="prompt">' + options.prompt + options.separator + '</div></td><td width="100%"><input class="cmdline" autofocus /></td></tr>',
-			'</table>',
-			'</div>'].join(''));
-		var _container = _terminal.querySelector('.container');
+		var _terminalInput = document.getElementById(inputID);
+		_terminalInput.classList.add('terminal');//TODO if missing
+		_terminalInput.classList.add('terminal-input');
+		_terminalInput.insertAdjacentHTML('beforeEnd',
+			/*'<div class="background"><div class="interlace"></div></div>' +*/
+			'<div class="prompt">' +
+			/*'<output></output>' +*/
+			'<span>' + _currentPrompt + '</span><input class="input-line" autofocus />' +
+			'</div>');
+		var _prompt = _terminalInput.querySelector('.prompt');
+		var _promptText = _prompt.querySelector('span');
+		var _inputLine = _prompt.querySelector('.input-line');
+
+		var _terminalOutput = document.getElementById(outputID);
+		_terminalOutput.classList.add('terminal');//TODO if missing
+		_terminalOutput.classList.add('terminal-output');
+		var _output = document.createElement('div');
+		_output.classList.add('output-view');
+		_terminalOutput.insertAdjacentElement('afterbegin', _output);
+		/*var _prompt = document.createElement('div');
+		//_prompt.//TODO make row?
+		_prompt.classList.add('prompt');
+		_prompt.insertAdjacentText('afterbegin', 'Prompt>');
+		var _inputLine = document.createElement('input');
+		_prompt.insertAdjacentElement('beforebegin', _inputLine)
+		_terminalInput.insertAdjacentElement('beforeEnd', _prompt);*/
+		
+		/*var _container = _terminal.querySelector('.container');
 		var _inputLine = _container.querySelector('.input-line');
 		var _cmdLine = _container.querySelector('.input-line .cmdline');
 		var _output = _container.querySelector('output');
 		var _prompt = _container.querySelector('.prompt');
-		var _background = document.querySelector('.background');
+		var _background = document.querySelector('.background');*/
 
+		/*
 		// Hackery to resize the interlace background image as the container grows.
 		_output.addEventListener('DOMSubtreeModified', function(e) {
 			// Works best with the scroll into view wrapped in a setTimeout.
@@ -52,13 +65,14 @@
 				_cmdLine.scrollIntoView();
 			}, 0);
 		}, false);
+		*/
 
 		if (options.welcome) {
 			output(options.welcome);
 		}
 
 		window.addEventListener('click', function(e) {
-			_cmdLine.focus();
+			_inputLine.focus();
 		}, false);
 
 		_output.addEventListener('click', function(e) {
@@ -66,39 +80,42 @@
 		}, false);
 
 		// Always force text cursor to end of input line.
-		_cmdLine.addEventListener('click', inputTextClick, false);
 		_inputLine.addEventListener('click', function(e) {
-			_cmdLine.focus();
+			_inputLine.value = _inputLine.value;
+		}, false);
+		
+		_terminalInput.addEventListener('click', function(e) {
+			_inputLine.focus();
 		}, false);
 
 		// Handle up/down key presses for shell history and enter for new command.
-		_cmdLine.addEventListener('keyup', historyHandler, false);
-		_cmdLine.addEventListener('keydown', processNewCommand, false);
+		_inputLine.addEventListener('keyup', onKeyUp, false);
+		_inputLine.addEventListener('keydown', onKeyDown, false);
 
 		window.addEventListener('keyup', function(e) {
-			_cmdLine.focus();
+			_inputLine.focus();
 			e.stopPropagation();
 			e.preventDefault();
 		}, false);
 
-		function inputTextClick(e) {
-			this.value = this.value;
+		function onKeyUp(e) {
+			historyHandler(e);//TODO break down
 		}
 
 		function historyHandler(e) {
 			// Clear command-line on Escape key.
 			if (e.keyCode == 27) {
-				this.value = '';
+				_inputLine.value = '';
 				e.stopPropagation();
 				e.preventDefault();
 			}
 
 			if (_history.length && (e.keyCode == 38 || e.keyCode == 40)) {
 				if (_history[_histpos]) {
-					_history[_histpos] = this.value;
+					_history[_histpos] = _inputLine.value;
 				}
 				else {
-					_histtemp = this.value;
+					_histtemp = _inputLine.value;
 				}
 
 				if (e.keyCode == 38) {
@@ -116,46 +133,38 @@
 					}
 				}
 
-				this.value = _history[_histpos] ? _history[_histpos] : _histtemp;
+				_inputLine.value = _history[_histpos] ? _history[_histpos] : _histtemp;
 
 				// Move cursor to end of input.
-				this.value = this.value;
+				_inputLine.value = _inputLine.value;
 			}
 		}
 
-		function processNewCommand(e) {
-			// Only handle the Enter key.
-			if (e.keyCode != 13) return;
+		function onKeyDown(e) {
+			if (e.keyCode == 13) processNewCommand();
+		}
 
-			var cmdline = this.value;
-			console.log(cmdline)
+		function processNewCommand() {
+			var inputline = _inputLine.value;
+
 			// Save shell history.
-			if (cmdline) {
-				_history[_history.length] = cmdline;
+			if (inputline) {
+				_history[_history.length] = inputline;
 				localStorage['history'] = JSON.stringify(_history);
 				_histpos = _history.length;
 			}
 
-			// Duplicate current input and append to output section.
-			var line = this.parentNode.parentNode.parentNode.parentNode.cloneNode(true);
-			line.removeAttribute('id')
-			line.classList.add('line');
-			var input = line.querySelector('input.cmdline');
-			input.autofocus = false;
-			input.readOnly = true;
-			input.insertAdjacentHTML('beforebegin', input.value);
-			input.parentNode.removeChild(input);
-			_output.appendChild(line);
+			output(_currentPrompt + ' ' + inputline);
 
 			// Hide command line until we're done processing input.
 			_inputLine.classList.add('hidden');
 
 			// Clear/setup line for next input.
-			this.value = '';
+			_inputLine.value = '';
 
 			// Parse out command, args, and trim off whitespace.
-			if (cmdline && cmdline.trim()) {
-				var args = cmdline.split(' ').filter(function(val, i) {
+			if (inputline && inputline.trim()) {
+				var args = inputline.split(' ').filter(function(val, i) {
 					return val;
 				});
 				var cmd = args[0];
@@ -169,8 +178,7 @@
 					if (ext.execute) response = ext.execute(cmd, args);
 					if (response !== false) break;
 				}
-				if (response === false) response = cmd + ': command not found';
-				output(response);
+				if (response === false) output(cmd + ': command not found');
 			}
 
 			// Show the command line.
@@ -179,21 +187,22 @@
 
 		function clear() {
 			_output.innerHTML = '';
-			_cmdLine.value = '';
-			_background.style.minHeight = '';
+			_inputLine.value = '';
+			//_background.style.minHeight = '';
 		}
 
 		function output(html) {
 			_output.insertAdjacentHTML('beforeEnd', html);
-			_cmdLine.scrollIntoView();
+			_output.insertAdjacentHTML('beforeEnd', '<br>');
+			//_cmdLine.scrollIntoView();
 		}
 
 		return {
 			clear: clear,
-			setPrompt: function(prompt) { _prompt.innerHTML = prompt + options.separator; },
-			getPrompt: function() { return _prompt.innerHTML.replace(new RegExp(options.separator + '$'), ''); },
-			setTheme: function(theme) { _terminal.classList.remove('terminal-' + options.theme); options.theme = theme; _terminal.classList.add('terminal-' + options.theme); },
-			getTheme: function() { return options.theme; }
+			output: output,
+			setPrompt: function(prompt) { _currentPrompt = prompt; _promptText.innerHTML = _currentPrompt; },
+			getPrompt: function() { return _currentPrompt; },
+			version: '1.0.0'
 		}
 	};
 

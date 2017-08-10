@@ -11,8 +11,37 @@ body {
 
 .terminal {
     color: #eee;
+    font-family: Inconsolata, monospace;
+
     background-color: #222;
     border: 1px solid #eee;
     border-radius: 3px;
     padding: 3px;
+}
+
+.prompt {
+    width: 100%;
+    display: -ms-flex;
+    display: -webkit-flex;
+    display: flex;
+}
+
+.input-line {
+    color: inherit;
+    font: inherit;
+    
+    background-color: transparent;
+    border: none;
+    margin: 0 0 0 10px;
+    outline: none;
+
+    position: relative;
+    height: 100%;
+    top: -1px;
+    
+    flex: 1;
+}
+
+.ouput-view {
+
 }
