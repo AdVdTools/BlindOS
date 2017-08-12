@@ -9,7 +9,8 @@ body {
     background-color: #444;
 }
 
-.terminal {
+.blind-view,
+.blind-text-input {
     color: #eee;
     font-family: Inconsolata, monospace;
 
@@ -19,29 +20,21 @@ body {
     padding: 3px;
 }
 
-.prompt {
-    width: 100%;
-    display: -ms-flex;
-    display: -webkit-flex;
-    display: flex;
-}
-
-.input-line {
+.blind-text-input .input-line {
     color: inherit;
     font: inherit;
     
     background-color: transparent;
     border: none;
-    margin: 0 0 0 10px;
+    margin: 0;
     outline: none;
 
     position: relative;
     height: 100%;
-    top: -1px;
-    
-    flex: 1;
+    width: 100%;
+    -top: -1px;
 }
 
-.ouput-view {
-
+.blind-view .ouput-view {
+    color: #8cf;
 }

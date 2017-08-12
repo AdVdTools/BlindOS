@@ -1,30 +1,15 @@
 window.onload = function() {
-    var terminal = new Terminal('term-input', 'term-output', {}, {
+    var ext = {
         execute: function(cmd, args) {
             switch (cmd) {
-                case 'clear':
-                    terminal.clear();
+                case 'extended':
+                    return this.execute(args[0], args.splice(1));
+                case 'custom':
+                    blindOS.output ('CUSTOM!');
                     break;
 
-                case 'help':
-                    terminal.output ('Commands: clear, help, prompt, echo, ver or version<br>More help available <a class="external" href="http://github.com/SDA/terminal" target="_blank">here</a>');
-                    break;
-                    
-                case 'prompt':
-                    if (args && args[0]) {
-                        if (args.length > 1) terminal.ouput('Too many arguments');
-                        else { terminal.setPrompt(args[0]); }
-                    }
-                    else terminal.output(terminal.getPrompt());
-                    break;
-
-                case 'echo':
-                    terminal.output(args.join(' '))
-                    break;
-
-                case 'ver':
-                case 'version':
-                    terminal.output(terminal.version);
+                case 'echo'://This one is hidden by default echo
+                    blindOS.output('CustomEcho: '+args.join(' '))
                     break;
 
                 default:
@@ -33,5 +18,32 @@ window.onload = function() {
             };
             return true;
         }
-    });
+    }
+
+    var blindOS = new BlindOS({}, ext);
+    
+    document.head.appendChild(loadJS("textInput.js", function () {
+        blindOS.connect('text-input', new TextInput('blind-text-input'));
+    },
+    function() {
+        console.log("ReadyStateChange "+arguments);
+    }));
+    
+    document.head.appendChild(loadJS("view.js", function () {
+        blindOS.connect('view', new BlindView('blind-view'));
+    },
+    function() {
+        console.log("ReadyStateChange "+arguments);//TODO when is this called?
+    }));
+
+    document.head.appendChild(loadJS("sentenceParser.js"));
+}
+
+function loadJS(url, onload, onreadystatechange) {
+    var scriptTag = document.createElement('script');
+    scriptTag.src = url;
+
+    scriptTag.onload = onload;
+    scriptTag.onreadystatechange = onreadystatechange;
+    return scriptTag;
 }

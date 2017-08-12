@@ -2,16 +2,18 @@
 <head>
   <title>Hello</title>
   <link rel="stylesheet" href="styles.css">
-  <script type="text/javascript" src="terminal.js"></script>
+  <script type="text/javascript" src="blind.js"></script>
   <script type="text/javascript" src="main.js"></script>
 </head>
 
 
 <body>
   <div style="position:relative; min-height:100%;">
-    <div class="terminal" id="term-output" style="height:calc(100% - 40px)">
+    <div id="blind-view" style="height:calc(100% - 40px)">
     </div>
-    <div class="terminal" id="term-input" style="position:absolute; bottom:0%; left:0%; width:calc(100% - 8px); height:20px">
+    <div style="width: 100%; display: -ms-flex; display: -webkit-flex; display: flex;">
+      <div id="blind-text-input" style="position:absolute; bottom:0%; left:0%; width:calc(100% - 8px); height:20px; flex: 1;">
+      </div>
     </div>
   </div>
 </body>
