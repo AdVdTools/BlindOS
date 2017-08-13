@@ -4,7 +4,6 @@
 		if (!patterns) return;
 
 		var defaults = {
-            findMultiple: false
 		};
 
         var options = options || {};
@@ -18,9 +17,11 @@
         }
         console.log(options)
 
+        var _patterns = patterns.slice(0);
+
 		function parse(sentence, callback) {
-            for (var index = 0; index < patterns.length; index++) {
-                var pattern = patterns[index];
+            for (var index = 0; index < _patterns.length; index++) {
+                var pattern = _patterns[index];
                 if (pattern.regex) {
                     var result = pattern.regex.exec(sentence);
                     if (result && result.index === 0) {
@@ -35,36 +36,34 @@
                         if (maps) {
                             var matchLength = result[0].length;
                             if (matchLength == sentence.length) {
-                                callback(sentence, maps);
-                                return 1;
+                                if (callback && callback(sentence, maps) === false) continue;//Which one should come first TODO
+                                if (pattern.callback && pattern.callback(sentence, maps) === false) continue;
+                                return true;
                             } 
-                            else if (options.findMultiple) {
-                                for(var delimIndex = 0; delimIndex < options.groupDelimiters.length; delimIndex++) {
-                                    var delim = options.groupDelimiters[delimIndex];
-                                    if (sentence.startsWith(delim, matchLength)) {
-                                        callback(sentence.slice(0, matchLength), maps);
-                                        var count = parse(sentence.slice(matchLength+delim.length), callback);
-                                        console.log("HERE "+count)
-                                        return count + 1;//extra match
-                                    }
-                                }
-                            }
                         }
                     }
                 }
             }
-            callback(sentence, null)
-            return 0;//No match
+            if (callback) callback(sentence, null)
+            return false;//No match
 		}
 
 		return {
-			parse: parse
+            parse: parse,
+            addPattern: function(pattern) { _patterns.push(pattern); }
 		}
-	};
+    };
+    
+    function SentencePattern(regex, map, callback) {
+        this.regex = regex;
+        this.map = map;
+        this.callback = callback;
+    }
 
 	// node.js
 	if (typeof module !== 'undefined' && module.exports) {
-		module.exports = SentenceParser;
+        module.exports = SentenceParser;
+        module.exports = SentencePattern;
 
 	// web browsers
 	} else {
@@ -73,7 +72,14 @@
 			global.SentenceParser = oldSentenceParser;
 			return SentenceParser;
 		};
-		global.SentenceParser = SentenceParser;
+        global.SentenceParser = SentenceParser;
+        
+		var oldSentencePattern = global.SentencePattern;
+		SentencePattern.noConflict = function () {
+			global.SentencePattern = oldSentencePattern;
+			return SentencePattern;
+		};
+        global.SentencePattern = SentencePattern;
 	}
 
 })(this);

@@ -27,67 +27,76 @@
         var _textInput;
         var _view;
 
+        document.head.appendChild(loadJS("sentenceParser.js"));//TODO prevent input until all scripts are loaded or handle unloaded functions properly
+
         console.log(arguments)// all the function arguments, including arguments beyond those specified in the signature
 
-		var extensions = Array.prototype.slice.call(arguments, 1);
+        var extensions = Array.prototype.slice.call(arguments, 1);
+        var cmdParser;
         var defaultCommands = {
-            execute: function(cmd, args) {
-                switch (cmd) {
-                    case 'clear':
+            execute: function(inputLine) {
+                cmdParser = cmdParser || new SentenceParser([
+                    // Detect patterns:
+                    new SentencePattern(/clear/i, { }, function(s, m) {
                         _view.clear();
-                        break;
-
-                    case 'help':
-                        output ('TODO');
-                        break;
-
-                    case 'echo':
-                        output(args.join(' '))
-                        break;
-
-                    case 'env':
-                    case 'environment':
-                        if (args.length == 0) for(var envvar in _environment) output(envvar+'='+_environment[envvar]);
-                        else if (args.length == 1) {
-                            if (args[0] === 'clear') localStorage['environment'] = JSON.stringify(_environment = {})
-                            else output(_environment[args[0]]);
+                    }),
+                    {
+                        regex: /help/i, map: { },
+                        callback: function(s, m) {
+                            output('I need help too');
                         }
-                        else setEnvironment(args);
-                        break;
-
-                    case 'ver':
-                    case 'version':
-                        output('Version: '+blind.version);
-                        break;
-
-                    default:
-                        // Unknown command.
-                        return false;
-                };
-                return true;
+                    },
+                    {
+                        regex: /echo (.+)/i, map: { text: 1 },
+                        callback: function(s, m) {
+                            output(m.text);
+                        }
+                    },
+                    {
+                        regex: /(env|environment)/i, map: { },
+                        callback: function(s, m) {
+                            for(var envvar in _environment) output(envvar+'='+_environment[envvar]);
+                        }
+                    },
+                    {
+                        regex: /(env|environment) (.+)/i, map: { args: 2 },
+                        callback: function(s, m) {
+                            setEnvironment(m.args)
+                        }
+                    },
+                    {
+                        regex: /clear (env|environment)/i, map: { },
+                        callback: function(s, m) {
+                            localStorage['environment'] = JSON.stringify(_environment = {})
+                        }
+                    },
+                    {
+                        regex: /ver|version/i, map: { },
+                        callback: function(s, m) {
+                            output('Version: '+blind.version)
+                        }
+                    }
+                    // All these words should become keywords
+                ], {
+                    // Options
+                })
+                var result = cmdParser.parse(inputLine);
+                return result;
             }
         }
 
         function doCommand(inputLine) {
             // Parse out command, args, and trim off whitespace.
             if (inputLine && inputLine.trim()) {
-				var args = inputLine.split(' ').filter(function(val, i) {
-					return val;
-				});
-				var cmd = args[0];
-				args = args.splice(1); // Remove cmd from arg list.
-			}
-
-			if (cmd) {
-				var response = defaultCommands.execute(cmd, args);
+                var response = defaultCommands.execute(inputLine);
 				if (response === false) {
                     for (var index in extensions) {
                         var ext = extensions[index];
-                        if (ext.execute) response = ext.execute(cmd, args);
+                        if (ext.execute) response = ext.execute(inputLine);
                         if (response !== false) break;
                     }
 				}
-				if (response === false) output(cmd + ': command not found');
+				if (response === false) output('Couldn\'t understand: '+inputLine);
 			}
         }
         function autoCompleteCommand(command, index) {
@@ -105,34 +114,36 @@
 
         var envParser;
 
-        function setEnvironment(args) {
-            envParser = envParser || new SentenceParser([
-                // Detect patterns:
-                { regex: /([^\s,]+)=(.+)/i, map: { name: 1, value: 2 }, captureCount: 2 },
-                { regex: /set ([^\s,]+) to ([^\s,]+)/i, map: { name: 1, value: 2 }, captureCount: 2 },// set * to *
-                { regex: /([^\s,]+) (is|equals) ([^\s,]+)/i, map: { name: 1, value: 3 }, captureCount: 3 },// * is *
-                // * equals *
-                { regex: /assign ([^\s,]+) to ([^\s,]+)/i, map: { name: 2, value: 1 }, captureCount: 2 },// assing * to *
-                // make * be *
-                { regex: /let ([^\s,]+) be ([^\s,]+)/, map: { name: 1, value: 2 } },// let * be *
-                { words: ['lets', 'say', undefined, 'is', undefined], map: { name: 1, value: 2 } }// lets say * is *
-                // lets say * equals *
-                // All these words should become keywords
-            ], {
-                findMultiple: true,
-                groupDelimiters: [', ', ' & ', ' and ']
-            })
-            var result = envParser.parse(args.join(' '), function (sentence, maps) {
-                if (maps) {
+        function setEnvironment(inputLine) {
+            function handleParse(sentence, maps) {
+                if (maps && maps.name) {
                     _environment[maps.name] = maps.value;
                     output(maps.name+'='+maps.value + ' ('+sentence+')');
                 }
-                else {
-                    output('Couldn\'n parse any more ('+sentence+')')
-                }
-            });
+            }
+            envParser = envParser || new SentenceParser([
+                // Detect patterns:
+                { 
+                    regex: /(.+) (and|&) (.+)/i,
+                    map: { left: 1, right: 3 },
+                    callback: function(s, m) {
+                        console.log(m.left+"..."+m.right)
+                        envParser.parse(m.left, handleParse);
+                        envParser.parse(m.right, handleParse);
+                    }
+                },
+                { regex: /([^\s,]+)=(.+)/i, map: { name: 1, value: 2 } },
+                { regex: /set ([^\s,]+) to ([^\s,]+)/i, map: { name: 1, value: 2 } },// set * to *
+                { regex: /([^\s,]+) (is|equals) ([^\s,]+)/i, map: { name: 1, value: 3 } },// * is *
+                { regex: /assign ([^\s,]+) to ([^\s,]+)/i, map: { name: 2, value: 1 } },// assing * to *
+                { regex: /let ([^\s,]+) be ([^\s,]+)/, map: { name: 1, value: 2 } },// let * be *
+                // All these words should become keywords
+            ], {
+                // Options
+            })
+            var result = envParser.parse(inputLine, handleParse);
             console.log(result + ' matches')
-            if (result > 0) localStorage['environment'] = JSON.stringify(_environment);
+            if (result) localStorage['environment'] = JSON.stringify(_environment);
             else output('Couldn\'t set any env');
         }
         
@@ -152,6 +163,10 @@
             
             case 'view':
                 _view = component;
+                break;
+
+            case 'extension':
+                extensions.push(component);
                 break;
             }
         }

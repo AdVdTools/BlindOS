@@ -1,22 +1,25 @@
 window.onload = function() {
     var ext = {
-        execute: function(cmd, args) {
-            switch (cmd) {
-                case 'extended':
-                    return this.execute(args[0], args.splice(1));
-                case 'custom':
+        parser: null,
+        execute: function(inputLine) {
+            ext.parser = ext.parser || new SentenceParser([
+                // Detect patterns:
+                new SentencePattern(/extended (.+)/i, { command: 1 }, function(s, m) {
+                    var res = ext.execute(m.command);
+                    if (!res) blindOS.output('extended command not found');
+                    return res;
+                }),
+                new SentencePattern(/custom/i, { }, function(s, m) {
                     blindOS.output ('CUSTOM!');
-                    break;
-
-                case 'echo'://This one is hidden by default echo
-                    blindOS.output('CustomEcho: '+args.join(' '))
-                    break;
-
-                default:
-                    // Unknown command.
-                    return false;
-            };
-            return true;
+                }),
+                new SentencePattern(/echo (.+)/i, { text: 1 }, function(s, m) {
+                    blindOS.output('Extended: '+m.text);
+                })
+            ], {
+                // Options
+            })
+            var result = ext.parser.parse(inputLine);
+            return result;
         }
     }
 
@@ -36,7 +39,13 @@ window.onload = function() {
         console.log("ReadyStateChange "+arguments);//TODO when is this called?
     }));
 
-    document.head.appendChild(loadJS("sentenceParser.js"));
+    document.head.appendChild(loadJS("extensions/todo.js", function () {
+        blindOS.connect('extension', new BlindTODO(blindOS));
+        //blindOS.connect('extension', new BlindTODO(blindOS, { name: 'advd todos', storage: 'my.todo.list' }));
+    }));
+    //TODO create todo extension (todo "task", todo list, working with lists?)
+    //TODO try catch execute and log errors in view
+    //TODO allow asking for input
 }
 
 function loadJS(url, onload, onreadystatechange) {

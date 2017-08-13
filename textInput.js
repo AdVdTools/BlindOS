@@ -20,6 +20,7 @@
 		var _history = localStorage.history ? JSON.parse(localStorage.history) : [];
 		var _histpos = _history.length;
 		var _histtemp = '';
+		//TODO limit history length
 
 		// Create terminal and cache DOM nodes;
 		var _input = document.getElementById(inputID);
