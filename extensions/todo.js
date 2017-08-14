@@ -59,15 +59,22 @@
         }
 
         function listLists() {
+            blindOS.current.list=_todosList;
             for(var i = 0; i < _todosList.length; i++) {
                 blindOS.output(_todosList[i].name+' at '+_todosList[i].path);
             }
         }
 
         function list(list) {
-            if (!list) list = 'something'; //TODO get current;
+            if (!list) list = blindOS.current.todoList;
+            if (!list) {
+                blindOS.output('No TODO list selected');
+                return;
+            }
+            var listName = list.name;
             var path = list.path;
             if (!path) {
+                listName = list;
                 var targetList = _todosList.find(function(l) { return l.name === list })
                 path = targetList ? targetList.path : null;
             }
@@ -77,6 +84,8 @@
                 for(var i = 0; i < todos.length; i++) {
                     blindOS.output(todos[i]);
                 }
+                blindOS.current.todoList=listName;
+                blindOS.current.list=todos;
             }
             else {
                 blindOS.output(list+" doesn\'t exist");
@@ -84,9 +93,15 @@
         }
 
         function add(task, list) {
-            if (!list) list = 'something'; //TODO get current;
+            if (!list) list = blindOS.current.todoList;
+            if (!list) {
+                blindOS.output('No TODO list selected');
+                return;
+            }
+            var listName = list.name;
             var path = list.path;
             if (!path) {
+                listName = list;
                 var targetList = _todosList.find(function(l) { return l.name === list })
                 path = targetList ? targetList.path : null;
             }
@@ -95,10 +110,16 @@
                 todos.push(task);
                 console.log(todos)
                 localStorage[options.storage] = JSON.stringify(_todoStorage); 
+                blindOS.current.todoList=listName;
             }
             else {
                 blindOS.output(list+" doesn\'t exist");
             }
+        }
+
+        function complete(task, list) {
+            //TODO convert word (first, last, etc) to index (0, 1, -1)
+            //TODO if task is index complete index, else search (startsWith)
         }
 
 		shelf = {
@@ -133,13 +154,33 @@
                             new SentencePattern(/list (.+)/i, { name: 1 }, function(s, m) {
                                 list(m.name)
                             }),
+                            new SentencePattern(/add (.+) to (.+)/i, { task: 1, list: 2 }, function(s, m) {
+                                add(m.task, m.list)
+                            }),
+                            new SentencePattern(/add (.+)/i, { task: 1 }, function(s, m) {
+                                add(m.task)
+                            }),
+                            new SentencePattern(/complete (.+) from (.+)/i, { task: 1, list: 2 }, function(s, m) {
+                                complete(m.task, m.list)
+                            }),
+                            new SentencePattern(/complete (.+)/i, { task: 1 }, function(s, m) {
+                                complete(m.task)
+                            }),
+                            new SentencePattern(/(.+) from (.+) is done/i, { task: 1, list : 2 }, function(s, m) {
+                                complete(m.task, m.list)
+                            }),
+                            new SentencePattern(/(.+) is done/i, { task: 1 }, function(s, m) {
+                                complete(m.task)
+                            }),
                             new SentencePattern(/"(.+)"/i, { task: 1 }, function(s, m) {
                                 blindOS.output('todo add '+m.task);// adds to current
+                                add(m.task)
                             }),//TODO specific list selection here
                             new SentencePattern(/(.+)/i, { task: 1 }, function(s, m) {
                                 blindOS.output('todo add '+m.task);// adds to current
                                 add(m.task)
                             })//TODO complete & add to specific
+                            //TODO reuse maps and functions
                         ], {})
                         var result = subParser.parse(m.args)
                         if (!result) {//Don't return false, this is being handled and it's an error

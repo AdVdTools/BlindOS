@@ -20,7 +20,7 @@
         }
         console.log(options)
 
-        var _current;
+        var _current = {};
         var _safeEnvironment = {};
         var _environment = localStorage.environment ? JSON.parse(localStorage.environment) : {};
 
@@ -172,6 +172,7 @@
         }
  
 		var blind = {
+            current: _current,
             output: output,
             connect: connect,
 			version: '1.0.0'
