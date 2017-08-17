@@ -4,15 +4,22 @@ window.onload = function() {
         execute: function(inputLine) {
             ext.parser = ext.parser || new SentenceParser([
                 // Detect patterns:
-                new SentencePattern(/extended (.+)/i, { command: 1 }, function(s, m) {
+                new SentencePattern(/extended (.+)/i, { command: 1 }, function(m) {
                     var res = ext.execute(m.command);
                     if (!res) blindOS.output('extended command not found');
                     return res;
                 }),
-                new SentencePattern(/custom/i, { }, function(s, m) {
-                    blindOS.output ('CUSTOM!');
+                new SentencePattern(/custom/i, { }, function(m) {
+                    blindOS.output ({
+                        toString: function() {
+                            return 'CUSTOM!';
+                        },
+                        toVoiceString: function() {
+                            return 'Voice!';
+                        }
+                    });
                 }),
-                new SentencePattern(/echo (.+)/i, { text: 1 }, function(s, m) {
+                new SentencePattern(/echo (.+)/i, { text: 1 }, function(m) {
                     blindOS.output('Extended: '+m.text);
                 })
             ], {
@@ -31,9 +38,19 @@ window.onload = function() {
     function() {
         console.log("ReadyStateChange "+arguments);
     }));
+
+    document.head.appendChild(loadJS("voiceSynth.js", function () {
+        if (!VoiceSynth) return;
+        var synth = new VoiceSynth(blindOS);
+        blindOS.connect('voice-synth', synth);
+        blindOS.connect('extension', synth);
+    },
+    function() {
+        console.log("ReadyStateChange "+arguments);
+    }));
     
     document.head.appendChild(loadJS("view.js", function () {
-        blindOS.connect('view', new BlindView('blind-view'));
+        blindOS.connect('view', new BlindView('blind-view'));//TODO should reference blindOS?
     },
     function() {
         console.log("ReadyStateChange "+arguments);//TODO when is this called?

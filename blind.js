@@ -26,53 +26,53 @@
 
         var _textInput;
         var _view;
+        var _voiceSynth;
 
         document.head.appendChild(loadJS("sentenceParser.js"));//TODO prevent input until all scripts are loaded or handle unloaded functions properly
 
         console.log(arguments)// all the function arguments, including arguments beyond those specified in the signature
 
         var extensions = Array.prototype.slice.call(arguments, 1);
+        _current.extensions = extensions
         var cmdParser;
         var defaultCommands = {
             execute: function(inputLine) {
                 cmdParser = cmdParser || new SentenceParser([
                     // Detect patterns:
-                    new SentencePattern(/clear/i, { }, function(s, m) {
+                    new SentencePattern(/clear/i, { }, function(m) {
                         _view.clear();
                     }),
-                    {
-                        regex: /help/i, map: { },
-                        callback: function(s, m) {
-                            output('I need help too');
-                        }
-                    },
-                    {
-                        regex: /echo (.+)/i, map: { text: 1 },
-                        callback: function(s, m) {
-                            output(m.text);
-                        }
-                    },
+                    new SentencePattern(/help/i, { }, function(m) {
+                        output('I need help too');
+                    }),
+                    new SentencePattern(/echo (.+)/i, { text: 1 }, function(m) {
+                        output(m.text);
+                    }),
+                    new SentencePattern(/close/i, {}, function(m) {
+                        output('Closed')
+                        _current.submodule = null
+                    }),
                     {
                         regex: /(env|environment)/i, map: { },
-                        callback: function(s, m) {
+                        callback: function(m) {
                             for(var envvar in _environment) output(envvar+'='+_environment[envvar]);
                         }
                     },
                     {
                         regex: /(env|environment) (.+)/i, map: { args: 2 },
-                        callback: function(s, m) {
+                        callback: function(m) {
                             setEnvironment(m.args)
                         }
                     },
                     {
                         regex: /clear (env|environment)/i, map: { },
-                        callback: function(s, m) {
+                        callback: function(m) {
                             localStorage['environment'] = JSON.stringify(_environment = {})
                         }
                     },
                     {
                         regex: /ver|version/i, map: { },
-                        callback: function(s, m) {
+                        callback: function(m) {
                             output('Version: '+blind.version)
                         }
                     }
@@ -89,6 +89,9 @@
             // Parse out command, args, and trim off whitespace.
             if (inputLine && inputLine.trim()) {
                 var response = defaultCommands.execute(inputLine);
+                if (response === false && _current.submodule) {
+                    response = _current.submodule.execute(inputLine);
+                }
 				if (response === false) {
                     for (var index in extensions) {
                         var ext = extensions[index];
@@ -99,23 +102,11 @@
 				if (response === false) output('Couldn\'t understand: '+inputLine);
 			}
         }
-        function autoCompleteCommand(command, index) {
-            var left = command.slice(0, index);
-            var right = command.slice(index);
-
-            return left+right;
-        }
-        function getAutoCompleteOptions(command, index) {
-            var left = command.slice(0, index);
-            var right = command.slice(index);
-
-            return [];
-        }
 
         var envParser;
 
         function setEnvironment(inputLine) {
-            function handleParse(sentence, maps) {
+            function handleParse(maps, sentence) {
                 if (maps && maps.name) {
                     _environment[maps.name] = maps.value;
                     output(maps.name+'='+maps.value + ' ('+sentence+')');
@@ -126,7 +117,7 @@
                 { 
                     regex: /(.+) (and|&) (.+)/i,
                     map: { left: 1, right: 3 },
-                    callback: function(s, m) {
+                    callback: function(m) {
                         console.log(m.left+"..."+m.right)
                         envParser.parse(m.left, handleParse);
                         envParser.parse(m.right, handleParse);
@@ -148,8 +139,30 @@
         }
         
         function output(text) {
-            if (_view) _view.output(text);
-            else console.log("No display: "+text);
+            if (typeof text === 'string') {
+                if (_view) outputText(text);
+                if (_voiceSynth) outputVoice(text);
+                if (!_view && !_voiceSynth) console.warn('No output: '+text)
+            }
+            else if (text) {
+                if (text.toVoiceString) outputVoice(text.toVoiceString());
+                else if (text.toString) outputVoice(text.toString());
+                if (text.toString) outputText(text.toString());
+            }
+        }
+
+        function outputText(text) {
+            if (_view) {
+                _view.output(text);
+            }
+            else console.warn("No display: "+text);
+        }
+
+        function outputVoice(voiceText) {
+            if (_voiceSynth) {
+                _voiceSynth.output(voiceText);
+            }
+            else console.warn("No voice synth: "+voiceText);
         }
 
         function connect(type, component) {
@@ -157,12 +170,14 @@
             case 'text-input':
                 _textInput = component;
                 if ("onCommand" in _textInput)  _textInput.onCommand = doCommand;
-                if ("onAutoComplete" in _textInput)  _textInput.onAutoComplete = autoCompleteCommand;
-                if ("getAutoCompleteOptions" in _textInput)  _textInput.getAutoCompleteOptions = getAutoCompleteOptions; 
                 break;
             
             case 'view':
                 _view = component;
+                break;
+            
+            case 'voice-synth':
+                _voiceSynth = component;
                 break;
 
             case 'extension':
@@ -174,6 +189,8 @@
 		var blind = {
             current: _current,
             output: output,
+            outputText: outputText,
+            outputVoice: outputVoice,
             connect: connect,
 			version: '1.0.0'
         }
