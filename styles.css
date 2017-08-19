@@ -35,6 +35,8 @@ body {
     -top: -1px;
 }
 
-.blind-view .ouput-view {
+.blind-view .output-view {
     color: #8cf;
+    height: 100%;
+    overflow-y: scroll;
 }

@@ -21,8 +21,6 @@
         console.log(options)
 
         var _current = {};
-        var _safeEnvironment = {};
-        var _environment = localStorage.environment ? JSON.parse(localStorage.environment) : {};
 
         var _textInput;
         var _view;
@@ -53,24 +51,6 @@
                         _current.submodule = null
                     }),
                     {
-                        regex: /(env|environment)/i, map: { },
-                        callback: function(m) {
-                            for(var envvar in _environment) output(envvar+'='+_environment[envvar]);
-                        }
-                    },
-                    {
-                        regex: /(env|environment) (.+)/i, map: { args: 2 },
-                        callback: function(m) {
-                            setEnvironment(m.args)
-                        }
-                    },
-                    {
-                        regex: /clear (env|environment)/i, map: { },
-                        callback: function(m) {
-                            localStorage['environment'] = JSON.stringify(_environment = {})
-                        }
-                    },
-                    {
                         regex: /ver|version/i, map: { },
                         callback: function(m) {
                             output('Version: '+blind.version)
@@ -88,54 +68,24 @@
         function doCommand(inputLine) {
             // Parse out command, args, and trim off whitespace.
             if (inputLine && inputLine.trim()) {
-                var response = defaultCommands.execute(inputLine);
-                if (response === false && _current.submodule) {
-                    response = _current.submodule.execute(inputLine);
-                }
-				if (response === false) {
-                    for (var index in extensions) {
-                        var ext = extensions[index];
-                        if (ext.execute) response = ext.execute(inputLine);
-                        if (response !== false) break;
-                    }
+            	try {
+	                var response = defaultCommands.execute(inputLine);
+	                if (response === false && _current.submodule) {
+	                    response = _current.submodule.execute(inputLine);
+	                }
+					if (response === false) {
+	                    for (var index in extensions) {
+	                        var ext = extensions[index];
+	                        if (ext.execute) response = ext.execute(inputLine);
+	                        if (response !== false) break;
+	                    }
+					}
+					if (response === false) output('Couldn\'t understand: '+inputLine);
 				}
-				if (response === false) output('Couldn\'t understand: '+inputLine);
+				catch (error) {
+					output('Error: '+error);
+				}
 			}
-        }
-
-        var envParser;
-
-        function setEnvironment(inputLine) {
-            function handleParse(maps, sentence) {
-                if (maps && maps.name) {
-                    _environment[maps.name] = maps.value;
-                    output(maps.name+'='+maps.value + ' ('+sentence+')');
-                }
-            }
-            envParser = envParser || new SentenceParser([
-                // Detect patterns:
-                { 
-                    regex: /(.+) (and|&) (.+)/i,
-                    map: { left: 1, right: 3 },
-                    callback: function(m) {
-                        console.log(m.left+"..."+m.right)
-                        envParser.parse(m.left, handleParse);
-                        envParser.parse(m.right, handleParse);
-                    }
-                },
-                { regex: /([^\s,]+)=(.+)/i, map: { name: 1, value: 2 } },
-                { regex: /set ([^\s,]+) to ([^\s,]+)/i, map: { name: 1, value: 2 } },// set * to *
-                { regex: /([^\s,]+) (is|equals) ([^\s,]+)/i, map: { name: 1, value: 3 } },// * is *
-                { regex: /assign ([^\s,]+) to ([^\s,]+)/i, map: { name: 2, value: 1 } },// assing * to *
-                { regex: /let ([^\s,]+) be ([^\s,]+)/, map: { name: 1, value: 2 } },// let * be *
-                // All these words should become keywords
-            ], {
-                // Options
-            })
-            var result = envParser.parse(inputLine, handleParse);
-            console.log(result + ' matches')
-            if (result) localStorage['environment'] = JSON.stringify(_environment);
-            else output('Couldn\'t set any env');
         }
         
         function output(text) {

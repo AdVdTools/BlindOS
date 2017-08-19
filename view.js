@@ -35,7 +35,7 @@
 
 		function output(text) {
 			_output.insertAdjacentHTML('beforeEnd', text+'<br>');
-			//_cmdLine.scrollIntoView();
+			_output.scrollTop = _output.scrollHeight - _output.clientHeight;
 		}
 
 		return {
