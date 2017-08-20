@@ -56,15 +56,19 @@ window.onload = function() {
         console.log("ReadyStateChange "+arguments);//TODO when is this called?
     }));
 
+    document.head.appendChild(loadJS("extensions/javascript.js", function () {
+        blindOS.connect('extension', new BlindJS(blindOS));
+    }));
+    
     document.head.appendChild(loadJS("extensions/todo.js", function () {
-        blindOS.connect('extension', new BlindTODO(blindOS));
-        //blindOS.connect('extension', new BlindTODO(blindOS, { name: 'advd todos', storage: 'my.todo.list' }));
+    	blindOS.connect('extension', new BlindTODO(blindOS));
     }));
     //TODO create todo extension (todo "task", todo list, working with lists?)
     //TODO try catch execute and log errors in view
     //TODO allow asking for input
 }
 
+//TODO move to BlindOS so it can't be used from console
 function loadJS(url, onload, onreadystatechange) {
     var scriptTag = document.createElement('script');
     scriptTag.src = url;
