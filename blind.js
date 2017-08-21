@@ -65,7 +65,7 @@
             }
         }
 
-        function doCommand(inputLine) {
+        function executeCommand(inputLine) {
             // Parse out command, args, and trim off whitespace.
             if (inputLine && inputLine.trim()) {
             	try {
@@ -117,11 +117,6 @@
 
         function connect(type, component) {
             switch (type) {
-            case 'text-input':
-                _textInput = component;
-                if ("onCommand" in _textInput)  _textInput.onCommand = doCommand;
-                break;
-            
             case 'view':
                 _view = component;
                 break;
@@ -138,6 +133,7 @@
  
 		var blind = {
             current: _current,
+            executeCommand: executeCommand,
             output: output,
             outputText: outputText,
             outputVoice: outputVoice,

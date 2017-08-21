@@ -1,9 +1,14 @@
 (function (global, undefined) {
+	var parser;
 
-	var TextInput = TextInput || function(inputID, options) {
-		if (!inputID) return;
-
+	var TextInput = TextInput || function(blindOS, options) {
+		if (!blindOS) { 
+			console.error('blindOS reference required.');
+			return;
+		}
+		
 		var defaults = {
+			inputID: "blind-text-input"
 		};
 
         var options = options || {};
@@ -23,10 +28,15 @@
 		//TODO limit history length
 
 		// Create terminal and cache DOM nodes;
-		var _input = document.getElementById(inputID);
+		var _input = document.getElementById(options.inputID);
 		_input.classList.add('blind-text-input');
 		_input.insertAdjacentHTML('beforeEnd', '<input class="input-line" autofocus />');
 		var _inputLine = _input.querySelector('.input-line');
+		
+		_input.insertAdjacentHTML('beforeEnd', '<div class="hist-back">&#x25B2;</div><div class="hist-fwd">&#x25BC;</div>');
+		var _histBack = _input.querySelector('.hist-back');
+		var _histFwd = _input.querySelector('.hist-fwd');
+		
 
 		window.addEventListener('click', function(e) {
 			_inputLine.focus();
@@ -34,8 +44,11 @@
 
 		// Always force text cursor to end of input line.
 		_inputLine.addEventListener('click', function(e) {
-			_inputLine.value = _inputLine.value;
+			//_inputLine.value = _inputLine.value;
 		}, false);
+		
+		_histBack.addEventListener('click', doHistBack, false);
+		_histFwd.addEventListener('click', doHistFwd, false);
 		
 		_input.addEventListener('click', function(e) {
 			_inputLine.focus();
@@ -52,43 +65,53 @@
 		}, false);
 
 		function onKeyUp(e) {
-			historyHandler(e);//TODO break down
-		}
-
-		function historyHandler(e) {
-			// Clear command-line on Escape key.
-			if (e.keyCode == 27) {
-				_inputLine.value = '';
+			//console.log(e.keyCode)
+			if (e.keyCode == 27) {//ESC
+				clear();
 				e.stopPropagation();
 				e.preventDefault();
 			}
-
-			if (_history.length && (e.keyCode == 38 || e.keyCode == 40)) {
+			
+			if (e.keyCode == 38) doHistBack();//Up
+			if (e.keyCode == 40) doHistFwd();//Down
+		}
+		
+		function doHistBack() {
+			if (_history.length) {
 				if (_history[_histpos]) {
 					_history[_histpos] = _inputLine.value;
 				}
 				else {
 					_histtemp = _inputLine.value;
 				}
-
-				if (e.keyCode == 38) {
-					// Up arrow key.
-					_histpos--;
-					if (_histpos < 0) {
-						_histpos = 0;
-					}
+			
+				_histpos--;
+				if (_histpos < 0) {
+					_histpos = 0;
 				}
-				else if (e.keyCode == 40) {
-					// Down arrow key.
-					_histpos++;
-					if (_histpos > _history.length) {
-						_histpos = _history.length;
-					}
-				}
-
+				
 				_inputLine.value = _history[_histpos] ? _history[_histpos] : _histtemp;
-
-				// Move cursor to end of input.
+				
+				_inputLine.value = _inputLine.value;
+			}
+		}
+		
+		function doHistFwd() {
+			if (_history.length) {
+				if (_history[_histpos]) {
+					_history[_histpos] = _inputLine.value;
+				}
+				else {
+					_histtemp = _inputLine.value;
+				}
+				
+				_histpos++;
+				if (_histpos > _history.length) {
+					_histpos = _history.length;
+				}
+				
+				_inputLine.value = _history[_histpos] ? _history[_histpos] : _histtemp;
+				
 				_inputLine.value = _inputLine.value;
 			}
 		}
@@ -113,7 +136,7 @@
 			// Clear/setup line for next input.
 			_inputLine.value = '';
 
-			if (textInput.onCommand) textInput.onCommand(inputline);
+			blindOS.executeCommand(inputline);
 
 			// Show the command line.
 			_inputLine.classList.remove('hidden');
@@ -125,9 +148,24 @@
 
 		var textInput = {
 			clear: clear,
-			onCommand: null,
-            onAutoComplete: null,
-            getAutoCompleteOptions: null
+			execute: function (inputLine) {
+				parser = parser || new SentenceParser([
+					// Detect patterns:
+					new SentencePattern(/history/i, { }, function(m) {
+						for (var h = 0; h < _history.length; h++) {
+							blindOS.output(_history[h]);
+						}
+					}),
+					new SentencePattern(/clear history/i, { }, function(m) {
+						localStorage['history'] = JSON.stringify(_history = []);
+						_histpos = 0;
+					})
+				], {
+					// Options
+				})
+				var result = parser.parse(inputLine);
+				return result;
+			}
 		}
 		return textInput
 	};

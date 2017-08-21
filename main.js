@@ -33,7 +33,7 @@ window.onload = function() {
     var blindOS = new BlindOS({}, ext);
     
     document.head.appendChild(loadJS("textInput.js", function () {
-        blindOS.connect('text-input', new TextInput('blind-text-input'));
+        blindOS.connect('extension', new TextInput(blindOS, { inputID: 'blind-text-input' }));
     },
     function() {
         console.log("ReadyStateChange "+arguments);
