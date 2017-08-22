@@ -61,6 +61,9 @@
                     new SentencePattern(/voice (.+)/i, { args: 1 }, function(m) {
                         //execute submodule
                         shelf.output(m.args)
+                    }),
+                    new SentencePattern(/voice shutup/i, { }, function(m) {
+                        speechSynthesis.cancel();
                     })
                 ], {
                     // Options

@@ -85,7 +85,10 @@
 				catch (error) {
 					output('Error: '+error);
 				}
-			}
+            }
+            else {
+                output(' ');
+            }
         }
         
         function output(text) {

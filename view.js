@@ -21,6 +21,10 @@
 		_viewElement.classList.add('blind-view');//TODO if missing
 		var _output = document.createElement('div');
 		_output.classList.add('output-view');
+		setTimeout(function () { 
+			console.log(_output.offsetWidth+" "+_output.clientWidth)
+			_output.style.width = "calc(100% + "+(_output.offsetWidth + _output.offsetLeft - _output.clientWidth) + "px)";
+		}, 1);
 		_viewElement.insertAdjacentElement('afterbegin', _output);
 		//TODO add environment slider, listview, etc
 ;
@@ -34,7 +38,7 @@
 		}
 
 		function output(text) {
-			_output.insertAdjacentHTML('beforeEnd', text+'<br>');
+			_output.insertAdjacentHTML('beforeEnd', '<pre>'+text+'</pre>');
 			_output.scrollTop = _output.scrollHeight - _output.clientHeight;
 		}
 
