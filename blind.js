@@ -67,7 +67,8 @@
 
         function executeCommand(inputLine) {
             // Parse out command, args, and trim off whitespace.
-            if (inputLine && inputLine.trim()) {
+            if (inputLine) inputLine = inputLine.trim()
+            if (inputLine) {
             	try {
 	                var response = defaultCommands.execute(inputLine);
 	                if (response === false && _current.submodule) {

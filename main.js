@@ -55,6 +55,10 @@ window.onload = function() {
     function() {
         console.log("ReadyStateChange "+arguments);//TODO when is this called?
     }));
+    
+    document.head.appendChild(loadJS("extensions/http.js", function () {
+    	blindOS.connect('extension', new BlindHttp(blindOS));
+    }));
 
     document.head.appendChild(loadJS("extensions/javascript.js", function () {
         blindOS.connect('extension', new BlindJS(blindOS));
