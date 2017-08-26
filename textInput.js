@@ -58,10 +58,8 @@
 		_inputLine.addEventListener('keyup', onKeyUp, false);
 		_inputLine.addEventListener('keydown', onKeyDown, false);
 
-		window.addEventListener('keyup', function(e) {
-			_inputLine.focus();
-			e.stopPropagation();
-			e.preventDefault();
+		window.addEventListener('keydown', function(e) {
+			//
 		}, false);
 
 		function onKeyUp(e) {
@@ -118,6 +116,7 @@
 
 		function onKeyDown(e) {
 			if (e.keyCode == 13) processNewCommand();
+			if (e.keyCode == 38 || e.keyCode == 40) e.preventDefault();
 		}
 
 		function processNewCommand() {

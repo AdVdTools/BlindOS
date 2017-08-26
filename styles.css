@@ -34,6 +34,7 @@ body {
     width: 100%;
 }
 
+.blind-text-input .hist-fwd,
 .blind-text-input .hist-back {
 	color: inherit;
 	background: inherit;
@@ -43,19 +44,13 @@ body {
 	width: 40px;
 	text-align: center;
 	position: absolute;
-	bottom:200%;
-	right: 0%;
 }
 .blind-text-input .hist-fwd {
-	color: inherit;
-	background: inherit;
-	border: inherit;
-	font: inherit;
-	height: 100%;
-	width: 40px;
-	text-align: center;
-	position: absolute;
 	bottom:100%;
+	right: 0%;
+}
+.blind-text-input .hist-back {
+	bottom:200%;
 	right: 0%;
 }
 
@@ -64,9 +59,9 @@ body {
 }
 
 .blind-view .output-view {
-    color: #8cf;
     height: 100%;
     width: 100%;
+    color: #8cf;
     padding-right: 0px;
     overflow-y: scroll;
     overflow-x: hidden;
@@ -80,4 +75,18 @@ body {
     white-space: -pre-wrap;      /* Opera 4-6 */
     white-space: -o-pre-wrap;    /* Opera 7 */
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+.blind-view .output-view pre:hover {
+    background: #468
+}
+
+
+.error {
+    color: #f68;
+}
+.warning {
+    color: #fc6;
+}
+.special {
+    color: #af6;
 }

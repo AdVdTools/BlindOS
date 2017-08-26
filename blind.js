@@ -81,10 +81,11 @@
 	                        if (response !== false) break;
 	                    }
 					}
-					if (response === false) output('Couldn\'t understand: '+inputLine);
+					if (response === false) output('Couldn\'t understand: '+inputLine, "error");
 				}
 				catch (error) {
-					output('Error: '+error);
+                    output(error, "error");
+                    console.error(error);
 				}
             }
             else {
@@ -92,22 +93,22 @@
             }
         }
         
-        function output(text) {
+        function output(text, styleClass) {
             if (typeof text === 'string') {
-                if (_view) outputText(text);
+                if (_view) outputText(text, styleClass);
                 if (_voiceSynth) outputVoice(text);
                 if (!_view && !_voiceSynth) console.warn('No output: '+text)
             }
             else if (text) {
                 if (text.toVoiceString) outputVoice(text.toVoiceString());
                 else if (text.toString) outputVoice(text.toString());
-                if (text.toString) outputText(text.toString());
+                outputText(text, styleClass);
             }
         }
 
-        function outputText(text) {
+        function outputText(text, styleClass) {
             if (_view) {
-                _view.output(text);
+                _view.output(text, styleClass);
             }
             else console.warn("No display: "+text);
         }

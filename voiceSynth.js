@@ -22,19 +22,30 @@
         }
         console.log(options)
 
-        var utt = new SpeechSynthesisUtterance();
+        var currVoice;
         
 		function output(text) {
+            var utt = new SpeechSynthesisUtterance();
             utt.text = text;
+            if (currVoice) utt.voice = currVoice;
             speechSynthesis.speak(utt);
         }//TODO queues
         
-        function setVoice(voiceName) {
-            var voices = speechSynthesis.getVoices();
-            var voice = voices.find((v) => v.name === voiceName);
+        function setVoice(voice) {
+            if (typeof voice === "string") voice = speechSynthesis.getVoices().find((v) => v.name === voice);
             console.log(voice)
-            if (voice) utt.voice = voice;
-            else blindOS.output(voiceName+" not found");
+            if (voice) currVoice = voice;
+            else blindOS.output(voice+" not found", "warning");
+        }
+
+        function getVoiceSelector(index, voice) {
+            var voiceSelector = document.createElement("pre");
+            voiceSelector.innerText = index+" - "+voice.name;
+            voiceSelector.onclick = function() {
+                setVoice(voice);
+            }
+            voiceSelector.toVoiceString = function () { return voice.name; }
+            return voiceSelector;
         }
 
 		var shelf = {
@@ -74,8 +85,10 @@
             listVoices: function() {
                 var voices = speechSynthesis.getVoices();
                 for(var i = 0; i < voices.length; i++) {
-                    blindOS.outputText(i+" - "+voices[i].name)
-                    console.log(voices[i])
+                    //blindOS.outputText(i+" - "+voices[i].name)
+                    var voiceSelector = getVoiceSelector(i, voices[i])
+                    blindOS.output(voiceSelector, "special");
+                    console.log(voiceSelector)
                 }
                 console.log(voices)
             },

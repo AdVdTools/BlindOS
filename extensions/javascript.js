@@ -38,7 +38,7 @@
 	        			blindOS.output(new String(result));
 	        		}
 	        	} catch(e) {
-	        		blindOS.output(new String(e));
+	        		blindOS.output(new String(e), "error");
 	        	}
 	        } 
 	        else {
