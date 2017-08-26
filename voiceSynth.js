@@ -27,7 +27,10 @@
 		function output(text) {
             var utt = new SpeechSynthesisUtterance();
             utt.text = text;
-            if (currVoice) utt.voice = currVoice;
+            if (currVoice) {
+	            utt.voice = currVoice;
+	            utt.lang = currVoice.lang;
+	        }
             speechSynthesis.speak(utt);
         }//TODO queues
         
@@ -41,9 +44,9 @@
         function getVoiceSelector(index, voice) {
             var voiceSelector = document.createElement("pre");
             voiceSelector.innerText = index+" - "+voice.name;
-            voiceSelector.onclick = function() {
+            voiceSelector.addEventListener('click', function(e) {
                 setVoice(voice);
-            }
+            }, false);
             voiceSelector.toVoiceString = function () { return voice.name; }
             return voiceSelector;
         }
