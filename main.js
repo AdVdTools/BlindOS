@@ -34,9 +34,11 @@ window.onload = function() {
                             if(typeof(worker) == "undefined") {
                                 worker = new Worker("extensions/workerTest.js");
                             }
+                            var line = document.createElement("pre")
                             worker.onmessage = function(event) {
-                                blindOS.output("Worker: "+event.data, "special");
+                                line.innerText = "Worker: "+event.data;
                             };
+                            blindOS.output(line, "special")
                         } else {
                             blindOS.output("Sorry! No Web Worker support.");
                         }
