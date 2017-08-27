@@ -24,8 +24,6 @@
             }*/
         }
         console.log(options)
-
-        console.log(localStorage)
         
         var _todoList;
         try {
@@ -35,7 +33,6 @@
             console.warn(err)//TODO native dialog call to decide if storage should be overriden
             _todoList = [];
         }
-        console.log(_todoList)
 
         function list() {
             for(var i = 0; i < _todoList.length; i++) {

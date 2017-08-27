@@ -19,6 +19,33 @@ window.onload = function() {
                         }
                     });
                 }),
+                new SentencePattern(/(capman)?(\s?ferran)?( .+)?/i, { }, function(m, s, r) {
+                    var iframe = document.createElement("iframe");
+                    iframe.src = "https://www.youtube.com/embed/x8s09GKkbd0?autoplay=1";
+                    //blindOS.output(JSON.stringify(r));
+                    if (r[3]) iframe.style.cssText = r[3].slice(1);
+                    if (!iframe.style.display) iframe.style.display = "block";
+                    iframe.style.position = "relative";
+                    blindOS.output(iframe);
+                }),
+                new SentencePattern(/worker (start|stop)/i, { action: 1 }, function (m) {
+                    if (m.action === "start") {
+                        if(typeof(Worker) !== "undefined") {
+                            if(typeof(worker) == "undefined") {
+                                worker = new Worker("extensions/workerTest.js");
+                            }
+                            worker.onmessage = function(event) {
+                                blindOS.output("Worker: "+event.data, "special");
+                            };
+                        } else {
+                            blindOS.output("Sorry! No Web Worker support.");
+                        }
+                    }
+                    else if (m.action === "stop") {
+                        worker.terminate();
+                        worker = undefined;
+                    }
+                }),
                 new SentencePattern(/echo (.+)/i, { text: 1 }, function(m) {
                     blindOS.output('Extended: '+m.text);
                 })

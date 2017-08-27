@@ -26,7 +26,7 @@
 		}, 1);
 		_viewElement.insertAdjacentElement('afterbegin', _output);
 		//TODO add environment slider, listview, etc
-;
+
 
 		_output.addEventListener('click', function(e) {
 			e.stopPropagation();

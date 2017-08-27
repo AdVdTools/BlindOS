@@ -36,15 +36,15 @@
                         if (maps) {
                             var matchLength = result[0].length;
                             if (matchLength == sentence.length) {
-                                if (callback && callback(maps, sentence) === false) continue;//Which one should come first TODO
-                                if (pattern.callback && pattern.callback(maps, sentence) === false) continue;
+                                if (callback && callback(maps, sentence, result) === false) continue;//Which one should come first TODO
+                                if (pattern.callback && pattern.callback(maps, sentence, result) === false) continue;
                                 return true;
                             } 
                         }
                     }
                 }
             }
-            if (callback) callback(null, sentence)
+            if (callback) callback(null, sentence, null)
             return false;//No match
 		}
 
