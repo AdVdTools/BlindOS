@@ -85,6 +85,21 @@
                 var result = parser.parse(inputLine);
                 return result;
             },
+            autoComplete: function (inputLeft) {
+                var left = inputLeft.toLowerCase();
+                var setVoiceMatch = /set voice (.*)/i.exec(inputLeft);
+                if (setVoiceMatch) {
+                    var nameStart = setVoiceMatch[1];
+                    var startLength = nameStart.length;
+                    return speechSynthesis.getVoices()
+                        .filter((v) => v.name.startsWith(nameStart))
+                        .map((v) => v.name.substr(startLength));
+                }
+                var options = ["voice ", "list voices", "set voice ", "shutup"]
+                var leftLength = left.length;
+                return options.filter((o) => o.startsWith(left))
+                    .map((o) => o.substr(leftLength));
+            },
             listVoices: function() {
                 var voices = speechSynthesis.getVoices();
                 for(var i = 0; i < voices.length; i++) {

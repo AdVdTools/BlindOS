@@ -33,7 +33,8 @@
 		_input.insertAdjacentHTML('beforeEnd', '<input class="input-line" autofocus />');
 		var _inputLine = _input.querySelector('.input-line');
 		
-		_input.insertAdjacentHTML('beforeEnd', '<div class="hist-back">&#x25B2;</div><div class="hist-fwd">&#x25BC;</div>');
+		_input.insertAdjacentHTML('beforeEnd', '<div class="auto-complete">&#x2605;</div><div class="hist-back">&#x25B2;</div><div class="hist-fwd">&#x25BC;</div>');
+		var _autoComplete = _input.querySelector('.auto-complete')
 		var _histBack = _input.querySelector('.hist-back');
 		var _histFwd = _input.querySelector('.hist-fwd');
 		
@@ -49,6 +50,7 @@
 		
 		_histBack.addEventListener('click', doHistBack, false);
 		_histFwd.addEventListener('click', doHistFwd, false);
+		_autoComplete.addEventListener('click', getAutoComplete, false);
 		
 		_input.addEventListener('click', function(e) {
 			_inputLine.focus();
@@ -72,6 +74,8 @@
 			
 			if (e.keyCode == 38) doHistBack();//Up
 			if (e.keyCode == 40) doHistFwd();//Down
+
+			if (e.keyCode == 9) getAutoComplete();//TAB
 		}
 		
 		function doHistBack() {
@@ -114,9 +118,46 @@
 			}
 		}
 
+		function getAutoComplete() {
+			var inputLine = _inputLine.value;
+			var inputLeft = inputLine.slice(0, _inputLine.selectionStart);
+			var inputSelection = inputLine.slice(_inputLine.selectionStart, _inputLine.selectionEnd);
+			var inputRight = inputLine.slice(_inputLine.selectionEnd);
+			var options = blindOS.autoCompleteOptions(inputLeft, inputSelection, inputRight);
+
+			var insert = getCommonSubstring(options);
+			if (insert) {
+				_inputLine.value = inputLeft + insert + inputRight;
+			}
+			else {
+				var lastWord = inputLeft.substring(inputLeft.lastIndexOf(' ') + 1);
+				for (var o = 0; o < options.length; o++) {
+					if (options[o]) blindOS.output(lastWord+options[o]);
+				}
+			}
+		}
+
+		function getCommonSubstring(options){
+			var iChar, iOpt;
+			var optsLength = options.length;
+			if (optsLength === 0) return;
+			var refOpt = options[0];
+			if (optsLength === 1) return refOpt;
+			var refLength = refOpt.length;
+			for (iChar = 0; iChar < refLength; iChar += 1) {
+				for (iOpt = 1; iOpt < optsLength; iOpt += 1) {
+					if (refOpt[iChar] !== options[iOpt][iChar]) {
+						return refOpt.substring(0, iChar);
+					}
+				}
+			}
+			return refOpt;
+		}
+
 		function onKeyDown(e) {
 			if (e.keyCode == 13) processNewCommand();
 			if (e.keyCode == 38 || e.keyCode == 40) e.preventDefault();
+			if (e.keyCode == 9) e.preventDefault();
 		}
 
 		function processNewCommand() {

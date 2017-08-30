@@ -68,6 +68,13 @@
                 })
                 var result = parser.parse(inputLine);
                 return result;
+            },
+            autoComplete: function (inputLeft) {
+                var left = inputLeft.toLowerCase();
+                var options = ["js", "javascript"]
+                var leftLength = left.length;
+                if (leftLength === 0) return options;
+                else return options.filter((o) => o.startsWith(left)).map((o) => o.substr(leftLength));
             }
         }
         return shelf;

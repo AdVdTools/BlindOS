@@ -62,7 +62,26 @@
                 })
                 var result = cmdParser.parse(inputLine);
                 return result;
+            },
+            autoComplete: function (inputLeft, inputSelection, inputRight) {
+                var left = inputLeft.toLowerCase();
+                var options = ["clear", "help", "echo", "close", "version"]
+                var leftLength = left.length;
+                if (leftLength === 0) return options;
+                else return options.filter((o) => o.startsWith(left)).map((o) => o.substr(leftLength));
             }
+        }
+
+        function autoCompleteOptions(inputLeft, inputSelection, inputRight) {
+            var options = [];
+            if (inputLeft != null && inputSelection != null && inputRight != null) {
+                Array.prototype.push.apply(options, defaultCommands.autoComplete(inputLeft, inputSelection, inputRight));
+                for (var index in extensions) {
+                    var ext = extensions[index];
+                    if (ext.autoComplete) Array.prototype.push.apply(options, ext.autoComplete(inputLeft, inputSelection, inputRight) || []);
+                }
+            }
+            return options;
         }
 
         function executeCommand(inputLine) {
@@ -139,6 +158,7 @@
 		var blind = {
             current: _current,
             executeCommand: executeCommand,
+            autoCompleteOptions: autoCompleteOptions,
             output: output,
             outputText: outputText,
             outputVoice: outputVoice,

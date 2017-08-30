@@ -90,6 +90,12 @@
                 if (!result) {//Don't return false, this is being handled and it's an error
                     blindOS.output('Couldn\'t parse TODO command ('+inputLine+')');
                 }
+            },
+            autoComplete: function (left) {
+                var options = ["remove", "delete", "list", "add", "complete"]
+                var leftLength = left.length;
+                if (leftLength === 0) return options;
+                else return options.filter((o) => o.startsWith(left)).map((o) => o.substr(leftLength));
             }
         }
 
@@ -113,6 +119,14 @@
                 })
                 var result = parser.parse(inputLine);
                 return result;
+            },
+            autoComplete: function (inputLeft) {
+                var left = inputLeft.toLowerCase();
+                if (left.startsWith("todo ")) return submodule.autoComplete(left.substr(5));
+                var options = ["todo", "list todos"]
+                var leftLength = left.length;
+                if (leftLength === 0) return options;
+                else return options.filter((o) => o.startsWith(left)).map((o) => o.substr(leftLength));
             }
         }
         return shelf;

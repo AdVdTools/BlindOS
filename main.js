@@ -56,6 +56,9 @@ window.onload = function() {
             })
             var result = ext.parser.parse(inputLine);
             return result;
+        },
+        autoComplete: function (inputLeft) {
+            return [];
         }
     }
 

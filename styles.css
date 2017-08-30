@@ -35,7 +35,8 @@ body {
 }
 
 .blind-text-input .hist-fwd,
-.blind-text-input .hist-back {
+.blind-text-input .hist-back,
+.blind-text-input .auto-complete {
 	color: inherit;
 	background: inherit;
 	border: inherit;
@@ -52,6 +53,10 @@ body {
 .blind-text-input .hist-back {
 	bottom:200%;
 	right: 0%;
+}
+.blind-text-input .auto-complete {
+	bottom:100%;
+	left: 0%;
 }
 
 .blind-view {
