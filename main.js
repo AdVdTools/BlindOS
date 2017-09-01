@@ -26,6 +26,8 @@ window.onload = function() {
                     if (r[3]) iframe.style.cssText = r[3].slice(1);
                     if (!iframe.style.display) iframe.style.display = "block";
                     iframe.style.position = "relative";
+                    if (!iframe.style.width) iframe.style.width = "100vw";
+                    if (!iframe.style.height) iframe.style.height = "56.25vw";
                     blindOS.output(iframe);
                 }),
                 new SentencePattern(/worker (start|stop)/i, { action: 1 }, function (m) {
@@ -48,6 +50,10 @@ window.onload = function() {
                         worker = undefined;
                     }
                 }),
+                new SentencePattern(/translate (.+)/i, { text: 1 }, function (m) {
+                    var url = "https://translation.googleapis.com/language/translate/v2?key="+apikey;
+                    blindHttp.http("post", url, { 'q' : m.text, 'target' : 'en' })
+                }),
                 new SentencePattern(/echo (.+)/i, { text: 1 }, function(m) {
                     blindOS.output('Extended: '+m.text);
                 })
@@ -62,6 +68,7 @@ window.onload = function() {
         }
     }
 
+    var blindHttp;
     var blindOS = new BlindOS({}, ext);
     
     document.head.appendChild(loadJS("textInput.js", function () {
@@ -89,7 +96,11 @@ window.onload = function() {
     }));
     
     document.head.appendChild(loadJS("extensions/http.js", function () {
-    	blindOS.connect('extension', new BlindHttp(blindOS));
+    	blindOS.connect('extension', blindHttp = new BlindHttp(blindOS));
+    }));
+    
+    document.head.appendChild(loadJS("extensions/findKey.js", function () {
+    	blindOS.connect('extension', new FindKey(blindOS));
     }));
 
     document.head.appendChild(loadJS("extensions/javascript.js", function () {
