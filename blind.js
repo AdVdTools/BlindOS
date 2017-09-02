@@ -51,7 +51,7 @@
                         _current.submodule = null
                     }),
                     {
-                        regex: /ver|version/i, map: { },
+                        regex: /version/i, map: { },
                         callback: function(m) {
                             output('Version: '+blind.version)
                         }
